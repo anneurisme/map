@@ -21,14 +21,14 @@
       minZoom: -2,
       maxZoom: 3
     });
-    var imageUrl = '/assets/map.png';
+    var imageUrl = 'assets/map.png';
     var imageOverlay = L.imageOverlay(imageUrl, mapBounds).addTo(map);
     map.fitBounds(mapBounds);
 
     var testMarkers = [
-      { x: 450, y: 780, title: "Stormglen Village", description: "A quiet coastal settlement." },
-      { x: 850, y: 620, title: "Gilneas City", description: "The capital city, heavily fortified." },
-      { x: 300, y: 350, title: "Greymane Manor", description: "Seat of leadership and history." }
+      { x: 450, y: 780, title: "Stormglen Village", description: "A settlement." },
+      { x: 850, y: 620, title: "Gilneas City", description: "The capital city." },
+      { x: 300, y: 350, title: "Greymane Manor", description: "Greymane ancestral home." }
     ];
 
     testMarkers.forEach(m => {
