@@ -9,10 +9,29 @@
     html, body { height: 100%; margin: 0; }
     #map { width: 100%; height: 100%; background: #000; }
     .custom-popup { font-family: Arial; font-size: 14px; }
+
+    /* New styles for text + emoji markers */
+    .text-label {
+      background: rgba(0,0,0,0.65);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    .emoji-icon {
+      font-size: 28px;
+      line-height: 32px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
   <div id="map"></div>
+
+  <!-- Load Leaflet once -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     var mapBounds = [[0, 0], [1000, 1600]];
@@ -21,22 +40,54 @@
       minZoom: -2,
       maxZoom: 3
     });
+
     var imageUrl = 'assets/map.png';
     var imageOverlay = L.imageOverlay(imageUrl, mapBounds).addTo(map);
     map.fitBounds(mapBounds);
 
+    /* --------------------------
+       Custom Icon Definitions
+    -------------------------- */
+
+    // For City / Village markers (word labels)
+    function makeLabel(text) {
+      return L.divIcon({
+        html: '<div class="text-label">' + text + '</div>',
+        className: 'label-icon',
+        iconSize: [60, 20]
+      });
+    }
+
+    // Wolf icon for Greymane Manor
+    var wolfIcon = L.divIcon({
+      html: '🐺',
+      className: 'emoji-icon',
+      iconSize: [32, 32]
+    });
+
+    /* --------------------------
+       Marker Data
+    -------------------------- */
+
     var testMarkers = [
-      { x: 450, y: 780, title: "Stormglen Village", description: "A settlement." },
-      { x: 850, y: 620, title: "Gilneas City", description: "The capital city." },
-      { x: 300, y: 350, title: "Greymane Manor", description: "Greymane ancestral home." }
+      { x: 450, y: 780, title: "Stormglen Village", description: "A settlement.", icon: makeLabel("Village") },
+      { x: 850, y: 620, title: "Gilneas City", description: "The capital city.", icon: makeLabel("City") },
+      { x: 300, y: 350, title: "Greymane Manor", description: "Greymane ancestral home.", icon: wolfIcon }
     ];
 
+    /* --------------------------
+       Render Markers
+    -------------------------- */
+
     testMarkers.forEach(m => {
-      L.marker([m.x, m.y]).addTo(map).bindPopup(
-        '<div class="custom-popup"><b>' + m.title + '</b><br>' + m.description + '</div>',
-        { autoClose: false }
-      ).on('mouseover', function () { this.openPopup(); })
-       .on('mouseout', function () { this.closePopup(); });
+      L.marker([m.x, m.y], { icon: m.icon })
+        .addTo(map)
+        .bindPopup(
+          '<div class="custom-popup"><b>' + m.title + '</b><br>' + m.description + '</div>',
+          { autoClose: false }
+        )
+        .on('mouseover', function () { this.openPopup(); })
+        .on('mouseout', function () { this.closePopup(); });
     });
   </script>
 </body>
