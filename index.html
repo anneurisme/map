@@ -1,155 +1,43 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="utf-8" />
-  <title>Interactive Map Demo — Test Data</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Interactive Map Demo</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
   <style>
-    html,body { height:100%; margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
-    #map { width:100%; height:100vh; }
-    .demo-header {
-      position: absolute;
-      left: 8px;
-      top: 8px;
-      z-index: 400;
-      background: rgba(255,255,255,0.95);
-      padding: 8px 10px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-      font-size: 14px;
-    }
-    .leaflet-popup-content { max-width: 300px; }
-    .emoji-icon {
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      font-size:20px;
-      line-height:1;
-      width:36px;
-      height:36px;
-      border-radius:18px;
-      background:rgba(255,255,255,0.95);
-      border:1px solid rgba(0,0,0,0.12);
-      box-shadow:0 1px 2px rgba(0,0,0,0.15);
-    }
-    .marker-label {
-      margin-top:4px;
-      font-size:12px;
-      text-align:center;
-      color:#333;
-      text-shadow: 0 1px 0 #fff;
-    }
-    .demo-footer {
-      position: absolute;
-      right: 8px;
-      bottom: 8px;
-      z-index: 400;
-      background: rgba(255,255,255,0.95);
-      padding: 6px 8px;
-      border-radius: 6px;
-      font-size: 12px;
-    }
+    html, body { height: 100%; margin: 0; }
+    #map { width: 100%; height: 100%; background: #000; }
+    .custom-popup { font-family: Arial; font-size: 14px; }
   </style>
 </head>
 <body>
   <div id="map"></div>
-  <div class="demo-header">Interactive Map Demo — Hover markers to view popups</div>
-  <div class="demo-footer">Leaflet + MarkerCluster — Test data only</div>
-
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-
   <script>
-    const SAMPLE_MARKERS = [
-      { id:1, lat:49.2827, lng:-123.1207, title:"Vancouver — Waterfront", short:"Waterfront hub", html:"<strong>Vancouver Waterfront</strong><br/>Popular area for transit, dining, and views of the inlet.", emoji:"⚓" },
-      { id:2, lat:49.2612, lng:-123.1139, title:"Granville Island", short:"Public market & arts", html:"<strong>Granville Island</strong><br/>Famous market, galleries & theatres. Great for local food.", emoji:"🎨" },
-      { id:3, lat:49.2333, lng:-123.1030, title:"Kitsilano Beach", short:"Beach & park", html:"<strong>Kits Beach</strong><br/>Sunbathing, volleyball and an iconic view of the city skyline.", emoji:"🏖️" },
-      { id:4, lat:49.2820, lng:-123.1171, title:"Gastown", short:"Historic district", html:"<strong>Gastown</strong><br/>Historic streets, boutiques, and the steam clock.", emoji:"🏙️" },
-      { id:5, lat:49.2879, lng:-123.1219, title:"Science World", short:"Science museum", html:"<strong>Science World</strong><br/>Interactive exhibits and family-friendly displays.", emoji:"🔬" }
+    var mapBounds = [[0, 0], [1000, 1600]];
+    var map = L.map('map', {
+      crs: L.CRS.Simple,
+      minZoom: -2,
+      maxZoom: 3
+    });
+    var imageUrl = '/assets/map.png';
+    var imageOverlay = L.imageOverlay(imageUrl, mapBounds).addTo(map);
+    map.fitBounds(mapBounds);
+
+    var testMarkers = [
+      { x: 450, y: 780, title: "Stormglen Village", description: "A quiet coastal settlement." },
+      { x: 850, y: 620, title: "Gilneas City", description: "The capital city, heavily fortified." },
+      { x: 300, y: 350, title: "Greymane Manor", description: "Seat of leadership and history." }
     ];
 
-    const map = L.map('map', { zoomControl: true }).setView([49.28, -123.12], 13);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
-      maxZoom: 19
-    }).addTo(map);
-
-    const clusterGroup = L.markerClusterGroup({ chunkedLoading: true });
-    map.addLayer(clusterGroup);
-
-    function escapeHtml(s) {
-      if (s == null) return '';
-      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    }
-
-    function makeEmojiIcon(emoji, size = 36) {
-      const html = `<div class="emoji-icon" style="width:${size}px;height:${size}px;border-radius:${size/2}px;">${escapeHtml(emoji||'📍')}</div>`;
-      return L.divIcon({ html, className: '', iconSize: [size, size], iconAnchor: [size/2, size] });
-    }
-
-    function addMarkers(items) {
-      clusterGroup.clearLayers();
-      const leafletMarkers = [];
-      items.forEach(item => {
-        const lat = Number(item.lat), lng = Number(item.lng);
-        if (!isFinite(lat) || !isFinite(lng)) return;
-        const icon = makeEmojiIcon(item.emoji || "📍", 36);
-        const marker = L.marker([lat, lng], { icon: icon, title: item.title || '' });
-        if (item.short) marker.bindTooltip(escapeHtml(item.short), { direction: 'top', offset: [0,-12]});
-        const popupHtml = `
-          <div style="font-size:14px;">
-            <div style="font-weight:700;margin-bottom:6px;">${escapeHtml(item.title)}</div>
-            <div style="font-size:13px;line-height:1.3;">${item.html || ''}</div>
-            <div style="margin-top:8px;font-size:12px;color:#666;">ID: ${escapeHtml(String(item.id))}</div>
-          </div>
-        `;
-        marker.bindPopup(popupHtml, { maxWidth: 320, closeButton: true });
-        marker.on('mouseover', function(){ this.openPopup(); });
-        marker.on('mouseout', function(){ this.closePopup(); });
-        marker.on('click', function(){ this.openPopup(); });
-        leafletMarkers.push(marker);
-        clusterGroup.addLayer(marker);
-      });
-      if (leafletMarkers.length) {
-        const group = L.featureGroup(leafletMarkers);
-        map.fitBounds(group.getBounds().pad(0.12));
-      }
-    }
-
-    addMarkers(SAMPLE_MARKERS);
-
-    const ResetControl = L.Control.extend({
-      options: { position: 'topleft' },
-      onAdd: function() {
-        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-        container.style.background = '#fff';
-        container.style.padding = '2px';
-        const btn = L.DomUtil.create('a', '', container);
-        btn.href = "#";
-        btn.title = "Reset View";
-        btn.innerHTML = "⤢";
-        btn.style.display = 'inline-block';
-        btn.style.width = '34px';
-        btn.style.height = '34px';
-        btn.style.lineHeight = '34px';
-        btn.style.textAlign = 'center';
-        btn.style.fontSize = '18px';
-        btn.onclick = (e) => {
-          e.preventDefault();
-          const all = clusterGroup.getLayers();
-          if (all.length) {
-            map.fitBounds(L.featureGroup(all).getBounds().pad(0.12));
-          } else {
-            map.setView([49.28, -123.12], 13);
-          }
-        };
-        return container;
-      }
+    testMarkers.forEach(m => {
+      L.marker([m.x, m.y]).addTo(map).bindPopup(
+        '<div class="custom-popup"><b>' + m.title + '</b><br>' + m.description + '</div>',
+        { autoClose: false }
+      ).on('mouseover', function () { this.openPopup(); })
+       .on('mouseout', function () { this.closePopup(); });
     });
-    map.addControl(new ResetControl());
   </script>
 </body>
 </html>
