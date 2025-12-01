@@ -159,7 +159,6 @@
     </div>
     <div class="top-title">KoG Neighborhood</div>
     <div class="top-links">
-      <!-- future links if you want them -->
     </div>
   </div>
 
@@ -193,8 +192,7 @@
     var imageOverlay = L.imageOverlay(imageUrl, mapBounds).addTo(map);
     map.fitBounds(mapBounds);
 
-    // Icon factories
-
+    // Icon factories ------
     // Zoomed-out emoji dot
     function makeEmojiDot(emoji) {
       var em = emoji || '•'; // fallback if Type is empty
@@ -220,8 +218,7 @@
       });
     }
 
-    // Zoom-based icon switching
-
+    // Zoom-based icon switching -----
     // Switch from emoji-only to emoji+label at/above this zoom
     var iconSwitchZoom = 0;
 
