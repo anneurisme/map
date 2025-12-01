@@ -14,22 +14,38 @@
       font-size: 14px;
     }
 
-    /* Marker label styles */
-    .text-label {
-      background: rgba(0,0,0,0.65);
+    /* Zoomed-in label with emoji */
+    .label-with-emoji {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(0,0,0,0.75);
       color: white;
-      padding: 2px 6px;
+      padding: 2px 6px 2px 8px;
       border-radius: 4px;
       font-size: 12px;
       font-family: Arial, sans-serif;
-      text-align: center;
+      border: 1px solid rgba(255,255,255,0.6);
       white-space: nowrap;
+      position: relative;
     }
 
-    .emoji-icon {
-      font-size: 28px;
-      line-height: 32px;
+    .label-with-emoji .label-emoji {
+      margin-right: 4px;
+      position: relative;
+      transform: translateX(-4px); /* slight overlap to the left */
+    }
+
+    .label-with-emoji .label-text {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Zoomed-out emoji-only icon */
+    .emoji-dot {
+      font-size: 18px;
+      line-height: 18px;
       text-align: center;
+      text-shadow: 0 0 3px rgba(0,0,0,0.8);
     }
   </style>
 </head>
@@ -38,7 +54,10 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // Basic map setup
+    // URL of your Apps Script Web App
+    const DATA_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+
+    // Map setup
     var mapBounds = [[0, 0], [1000, 1600]];
     var map = L.map('map', {
       crs: L.CRS.Simple,
@@ -46,95 +65,51 @@
       maxZoom: 4
     });
 
-    var imageUrl = 'assets/map.jpg'; // make sure this path is correct in your repo
+    var imageUrl = 'assets/map.jpg'; // adjust if needed
     var imageOverlay = L.imageOverlay(imageUrl, mapBounds).addTo(map);
     map.fitBounds(mapBounds);
 
     /* --------------------------
-       Custom Icon Definitions
+       Icon factories
     -------------------------- */
 
-    function makeLabel(text) {
+    // Zoomed-out emoji dot
+    function makeEmojiDot(emoji) {
+      var em = emoji || '•'; // fallback if Type is empty
       return L.divIcon({
-        html: '<div class="text-label">' + text + '</div>',
-        className: 'label-icon',
-        iconSize: [60, 20]
+        html: '<div class="emoji-dot">' + em + '</div>',
+        className: '',   // keep default
+        iconSize: [18, 18]
       });
     }
 
-    // Wolf icon for Greymane Manor
-    var wolfIconSmall = L.divIcon({
-      html: '🐺',
-      className: 'emoji-icon',
-      iconSize: [32, 32]
-    });
-
-    // (Optional) Larger wolf for zoomed-in view – tweak size if desired
-    var wolfIconLarge = L.divIcon({
-      html: '🐺',
-      className: 'emoji-icon',
-      iconSize: [40, 40]
-    });
+    // Zoomed-in label with emoji + title
+    function makeEmojiLabel(emoji, text) {
+      var em = emoji || '';
+      var labelText = text || '';
+      return L.divIcon({
+        html:
+          '<div class="label-with-emoji">' +
+            (em ? '<span class="label-emoji">' + em + '</span>' : '') +
+            '<span class="label-text">' + labelText + '</span>' +
+          '</div>',
+        className: '',
+        iconSize: [80, 22]
+      });
+    }
 
     /* --------------------------
        Zoom-based icon switching
     -------------------------- */
 
-    // Change this to control when icons switch
-    // Zoom levels (for CRS.Simple) are typically: -2, -1, 0, 1, 2, 3, 4...
-    var iconSwitchZoom = 1;
+    // Switch from emoji-only → emoji+label at / above this zoom
+    var iconSwitchZoom = 0;
 
-    /* --------------------------
-       Marker Setup
-    -------------------------- */
-
-    // Create marker objects with zoomOutIcon + zoomInIcon
-    var markers = [
-      {
-        id: 'stormglen',
-        marker: L.marker([450, 780], { icon: makeLabel('Village') }).addTo(map),
-        zoomOutIcon: makeLabel('Village'),
-        zoomInIcon: makeLabel('VILLAGE')
-      },
-      {
-        id: 'gilneas_city',
-        marker: L.marker([850, 620], { icon: makeLabel('City') }).addTo(map),
-        zoomOutIcon: makeLabel('City'),
-        zoomInIcon: makeLabel('CITY')
-      },
-      {
-        id: 'greymane_manor',
-        marker: L.marker([300, 350], { icon: wolfIconSmall }).addTo(map),
-        zoomOutIcon: wolfIconSmall,
-        zoomInIcon: wolfIconLarge
-      }
-    ];
-
-    // Popup content mapped to markers in the same order
-    var popupData = [
-      { title: 'Stormglen Village', description: 'A settlement.' },
-      { title: 'Gilneas City', description: 'The capital city.' },
-      { title: 'Greymane Manor', description: 'Greymane ancestral home.' }
-    ];
-
-    // Attach popups + hover behavior
-    markers.forEach(function (obj, i) {
-      obj.marker.bindPopup(
-        '<div class="custom-popup"><b>' + popupData[i].title + '</b><br>' +
-        popupData[i].description + '</div>',
-        { autoClose: false }
-      )
-      .on('mouseover', function () { this.openPopup(); })
-      .on('mouseout', function () { this.closePopup(); });
-    });
-
-    /* --------------------------
-       Switch Icons on Zoom
-    -------------------------- */
+    // Will hold: { marker, zoomOutIcon, zoomInIcon, meta... }
+    var markers = [];
 
     function updateIconsForZoom() {
       var currentZoom = map.getZoom();
-
       markers.forEach(function (obj) {
         if (currentZoom >= iconSwitchZoom) {
           obj.marker.setIcon(obj.zoomInIcon);
@@ -144,11 +119,85 @@
       });
     }
 
-    // Run once at start
-    updateIconsForZoom();
-
-    // Update any time zoom changes
     map.on('zoomend', updateIconsForZoom);
+
+    /* --------------------------
+       Create markers from sheet data
+    -------------------------- */
+
+    function createMarkersFromData(sheetMarkers) {
+      markers = []; // reset if reloading
+
+      sheetMarkers.forEach(function (row) {
+        // Expecting: { owner, title, info, x, y, type }
+        var owner = row.owner || '';
+        var title = row.title || 'Unknown';
+        var info  = row.info  || '';
+        var x     = parseFloat(row.x);
+        var y     = parseFloat(row.y);
+        var type  = row.type  || ''; // emoji from Type column
+
+        if (isNaN(x) || isNaN(y)) {
+          console.warn('Skipping row with invalid coords:', row);
+          return;
+        }
+
+        // Keep [x, y] to match how you've been using coordinates.
+        // If it looks "flipped", swap to [y, x].
+        var position = [x, y];
+
+        var zoomOutIcon = makeEmojiDot(type);
+        var zoomInIcon  = makeEmojiLabel(type, title);
+
+        var marker = L.marker(position, { icon: zoomOutIcon }).addTo(map);
+
+        var popupHtml =
+          '<div class="custom-popup">' +
+            '<b>' + title + '</b><br>' +
+            (owner ? '<i>' + owner + '</i><br>' : '') +
+            info +
+          '</div>';
+
+        marker
+          .bindPopup(popupHtml, { autoClose: false })
+          .on('mouseover', function () { this.openPopup(); })
+          .on('mouseout', function () { this.closePopup(); });
+
+        markers.push({
+          marker: marker,
+          zoomOutIcon: zoomOutIcon,
+          zoomInIcon: zoomInIcon,
+          owner: owner,
+          title: title,
+          info: info,
+          x: x,
+          y: y,
+          type: type
+        });
+      });
+
+      // Apply the correct icon state after creating them
+      updateIconsForZoom();
+    }
+
+    /* --------------------------
+       Fetch data from Apps Script
+    -------------------------- */
+
+    fetch(DATA_URL)
+      .then(function (response) {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(function (data) {
+        // Expecting: { markers: [ { owner, title, info, x, y, type }, ... ] }
+        createMarkersFromData(data.markers || []);
+      })
+      .catch(function (error) {
+        console.error('Error fetching marker data:', error);
+      });
   </script>
 </body>
 </html>
