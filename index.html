@@ -164,14 +164,17 @@
         var marker = L.marker(position, { icon: zoomOutIcon }).addTo(map);
 
         var infoHtml = info ? info.replace(/\n/g, '<br>') : '';
-
+        var ownerHtml = owner ? '<i>' + owner + '</i>' : '';
+        var divider = (owner && infoHtml) ? '<hr class="popup-divider">' : '';
+        
         var popupHtml =
           '<div class="custom-popup">' +
             '<b>' + title + '</b><br>' +
-            (owner ? '<i>' + owner + '</i>' : '') +
-            (owner && infoHtml ? '<br><br>' : owner ? '<br>' : '') +
+            ownerHtml +
+            divider +
             infoHtml +
           '</div>';
+
 
 
         marker
