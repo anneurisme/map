@@ -32,7 +32,7 @@
     .label-with-emoji .label-emoji {
       margin-right: 4px;
       position: relative;
-      transform: translateX(-4px); /* slight overlap to the left */
+      transform: translateX(-4px);
     }
 
     .label-with-emoji .label-text {
@@ -85,13 +85,11 @@
       attributionControl: false
     });
 
-    var imageUrl = 'assets/map.jpg'; // adjust if needed
+    var imageUrl = 'assets/map.jpg';
     var imageOverlay = L.imageOverlay(imageUrl, mapBounds).addTo(map);
     map.fitBounds(mapBounds);
 
-    /* --------------------------
-       Icon factories
-    -------------------------- */
+    // Icon factories
 
     // Zoomed-out emoji dot
     function makeEmojiDot(emoji) {
@@ -118,11 +116,9 @@
       });
     }
 
-    /* --------------------------
-       Zoom-based icon switching
-    -------------------------- */
+    // Zoom-based icon switching
 
-    // Switch from emoji-only → emoji+label at / above this zoom
+    // Switch from emoji-only to emoji+label at/above this zoom
     var iconSwitchZoom = 0;
 
     // Will hold: { marker, zoomOutIcon, zoomInIcon, meta... }
@@ -141,9 +137,7 @@
 
     map.on('zoomend', updateIconsForZoom);
 
-    /* --------------------------
-       Create markers from sheet data
-    -------------------------- */
+    // Create markers from sheet data
 
     function createMarkersFromData(sheetMarkers) {
       markers = []; // reset if reloading
@@ -162,8 +156,6 @@
           return;
         }
 
-        // Keep [x, y] to match how you've been using coordinates.
-        // If it looks "flipped", swap to [y, x].
         var position = [x, y];
 
         var zoomOutIcon = makeEmojiDot(type);
@@ -196,13 +188,10 @@
         });
       });
 
-      // Apply the correct icon state after creating them
       updateIconsForZoom();
     }
 
-    /* --------------------------
-       Fetch data from Apps Script
-    -------------------------- */
+    // Fetch data from Apps Script
 
     fetch(DATA_URL)
       .then(function (response) {
