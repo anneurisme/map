@@ -163,12 +163,16 @@
 
         var marker = L.marker(position, { icon: zoomOutIcon }).addTo(map);
 
+        var infoHtml = info ? info.replace(/\n/g, '<br>') : '';
+
         var popupHtml =
           '<div class="custom-popup">' +
             '<b>' + title + '</b><br>' +
-            (owner ? '<i>' + owner + '</i><br><br>' : '') +
-            info.replace(/\n/g, '<br>') +
+            (owner ? '<i>' + owner + '</i>' : '') +
+            (owner && infoHtml ? '<br><br>' : owner ? '<br>' : '') +
+            infoHtml +
           '</div>';
+
 
         marker
           .bindPopup(popupHtml, { autoClose: false })
