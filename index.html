@@ -119,6 +119,11 @@
     #top-bar .top-title {
       font-weight: bold;
     }
+    #top-bar .top-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
     #top-bar .top-links a {
       color: #ccc;
       margin-left: 12px;
@@ -150,15 +155,14 @@
 <body>
   <!-- Top bar with dropdown -->
   <div id="top-bar">
-    <div class="top-left">
+    <div class="top-title">KoG Neighborhood</div>
+  
+    <div class="top-right">
       <span style="font-size:12px;">Neighborhood:</span>
       <select id="neighborhood-select">
         <option value="Neighborhood 1">Neighborhood 1</option>
         <option value="Neighborhood 2">Neighborhood 2</option>
       </select>
-    </div>
-    <div class="top-title">KoG Neighborhood</div>
-    <div class="top-links">
     </div>
   </div>
 
