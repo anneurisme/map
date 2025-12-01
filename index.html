@@ -80,8 +80,9 @@
       .leaflet-popup-tip {
         display: none !important;
       }
-
-
+      .title-pop {
+        color: #fbac3a;
+      }
   </style>
 </head>
 <body>
@@ -190,7 +191,7 @@
         
         var popupHtml =
           '<div class="custom-popup">' +
-            '<b>' + title + '</b><br>' +
+            '<span class="title-pop">' + title + '</span><br>' +
             ownerHtml +
             divider +
             infoHtml +
