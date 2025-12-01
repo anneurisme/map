@@ -59,7 +59,7 @@
       });
     }
 
-    // Wolf icon for Greymane Manor
+    // Wolf icon (used for zoomed-out state for all, and for Greymane zoomed-in)
     var wolfIcon = L.divIcon({
       html: '🐺',
       className: 'emoji-icon',
@@ -70,18 +70,44 @@
        Marker Data
     -------------------------- */
 
+    // zoomInIcon = what to show when zoomed in
+    // zoomOutIcon = what to show when zoomed out (all wolves)
     var testMarkers = [
-      { x: 450, y: 780, title: "Stormglen Village", description: "A settlement.", icon: makeLabel("Village") },
-      { x: 850, y: 620, title: "Gilneas City", description: "The capital city.", icon: makeLabel("City") },
-      { x: 300, y: 350, title: "Greymane Manor", description: "Greymane ancestral home.", icon: wolfIcon }
+      {
+        x: 450,
+        y: 780,
+        title: "Stormglen Village",
+        description: "A settlement.",
+        zoomInIcon: makeLabel("Village")
+      },
+      {
+        x: 850,
+        y: 620,
+        title: "Gilneas City",
+        description: "The capital city.",
+        zoomInIcon: makeLabel("City")
+      },
+      {
+        x: 300,
+        y: 350,
+        title: "Greymane Manor",
+        description: "Greymane ancestral home.",
+        zoomInIcon: wolfIcon
+      }
     ];
+
+    // All zoomed-out icons are wolves
+    testMarkers.forEach(m => {
+      m.zoomOutIcon = wolfIcon;
+    });
 
     /* --------------------------
        Render Markers
     -------------------------- */
 
     testMarkers.forEach(m => {
-      L.marker([m.x, m.y], { icon: m.icon })
+      // Start with zoomed-out icon (wolf); we will adjust after based on zoom
+      m.instance = L.marker([m.x, m.y], { icon: m.zoomOutIcon })
         .addTo(map)
         .bindPopup(
           '<div class="custom-popup"><b>' + m.title + '</b><br>' + m.description + '</div>',
@@ -90,6 +116,30 @@
         .on('mouseover', function () { this.openPopup(); })
         .on('mouseout', function () { this.closePopup(); });
     });
+
+    /* --------------------------
+       Zoom-based Icon Switching
+    -------------------------- */
+
+    function updateIconsForZoom() {
+      var z = map.getZoom();
+
+      testMarkers.forEach(m => {
+        if (z >= 0) {
+          // Zoomed in: use per-location icon (labels / wolf)
+          m.instance.setIcon(m.zoomInIcon);
+        } else {
+          // Zoomed out: all wolves
+          m.instance.setIcon(m.zoomOutIcon);
+        }
+      });
+    }
+
+    // Run once after initial fit
+    map.whenReady(updateIconsForZoom);
+
+    // Re-run whenever zoom changes
+    map.on('zoomend', updateIconsForZoom);
   </script>
 </body>
 </html>
