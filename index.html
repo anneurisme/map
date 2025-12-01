@@ -174,7 +174,7 @@
           '<div class="custom-popup">' +
             '<b>' + title + '</b><br>' +
             (owner ? '<i>' + owner + '</i><br>' : '') +
-            info +
+            info.replace(/\n/g, '<br>') +
           '</div>';
 
         marker
