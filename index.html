@@ -67,16 +67,14 @@
       justify-content: center;
     }
     
-    /* Fullscreen background */
     #loading-screen .loading-bg {
       position: absolute;
       inset: 0;
       background: url('assets/loadingbackground.png') center/cover no-repeat rgba(0,0,0,0.85);
-      filter: brightness(0.4) blur(2px); /* dark + slight blur */
+      filter: brightness(0.4) blur(2px);
       z-index: 1;
     }
 
-    /* Wrapper for logo + text */
     .loading-content {
       position: relative;
       z-index: 2;
@@ -86,7 +84,6 @@
       justify-content: center;
     }
     
-    /* The pulsing logo (animation only) */
     .loading-pulse {
       position: relative;
       opacity: 0.9;
@@ -94,7 +91,6 @@
       filter: drop-shadow(0 0 8px rgba(0,0,0,0.7));
     }
 
-    /* Force the logo to 400x400 */
     #loading-screen img.loading-pulse {
       width: 400px !important;
       height: 400px !important;
@@ -104,10 +100,8 @@
       display: block;
     }
 
-    /* Loading text over/under the logo */
-    .loading-text {
-      margin-top: -40px;              /* pulls text slightly over bottom of logo */
-      font-size: 32px;
+    .loading-text {    
+      font-size: 40px;
       color: #ffffff;
       font-family: Arial, sans-serif;
       text-shadow: 0 0 10px rgba(0,0,0,0.9);
