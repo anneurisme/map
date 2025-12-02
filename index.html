@@ -76,21 +76,27 @@
       z-index: 1;
     }
     
-    /* The pulsing logo */
+    /* The pulsing logo (base animation) */
     .loading-pulse {
       position: relative;
       z-index: 2;
-      height: 128px;          /* adjust to taste */
-      width: auto;
       opacity: 0.9;
-      animation: pulse 3.6s ease-in-out infinite;
+      animation: pulse 4.5s ease-in-out infinite;
       filter: drop-shadow(0 0 8px rgba(0,0,0,0.7));
+    }
+
+    /* Force proper size, override any global img rules */
+    #loading-screen img.loading-pulse {
+      width: 220px;           /* tweak to taste: 200–280px works well */
+      height: 220px;
+      max-width: none !important;
+      object-fit: contain;
     }
     
     /* Pulse animation */
     @keyframes pulse {
       0%   { transform: scale(1.00); opacity: 0.9; }
-      50%  { transform: scale(1.03); opacity: 1.0; }
+      50%  { transform: scale(1.05); opacity: 1.0; }
       100% { transform: scale(1.00); opacity: 0.9; }
     }
 
@@ -154,7 +160,7 @@
       text-decoration: none;
     }
 
-    /* Left side of top bar (label + dropdown) */
+    /* Left side of top bar (logo + title) */
     #top-bar .top-left {
       display: flex;
       align-items: center;
@@ -257,11 +263,10 @@
       });
     }
 
-
     // Switch from emoji-only to emoji+label at/above this zoom
     var iconSwitchZoom = 0;
 
-    // Will hold:  marker, zoomOutIcon, zoomInIcon, meta, etc
+    // Will hold: marker, zoomOutIcon, zoomInIcon, meta, etc
     var markers = [];
 
     function updateIconsForZoom() {
