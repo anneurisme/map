@@ -75,29 +75,52 @@
       filter: brightness(0.4) blur(2px); /* dark + slight blur */
       z-index: 1;
     }
-    
-    /* The pulsing logo (base animation) */
-    .loading-pulse {
+
+    /* Wrapper for logo + text */
+    .loading-content {
       position: relative;
       z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* The pulsing logo (animation only) */
+    .loading-pulse {
+      position: relative;
       opacity: 0.9;
       animation: pulse 4.5s ease-in-out infinite;
       filter: drop-shadow(0 0 8px rgba(0,0,0,0.7));
     }
 
-    /* Force proper size, override any global img rules */
+    /* Force the logo to 400x400 */
     #loading-screen img.loading-pulse {
-      width: 220px;           /* tweak to taste: 200–280px works well */
-      height: 220px;
+      width: 400px !important;
+      height: 400px !important;
       max-width: none !important;
+      max-height: none !important;
       object-fit: contain;
+      display: block;
+    }
+
+    /* Loading text over/under the logo */
+    .loading-text {
+      margin-top: -40px;              /* pulls text slightly over bottom of logo */
+      font-size: 32px;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      text-shadow: 0 0 10px rgba(0,0,0,0.9);
+      font-weight: bold;
+      z-index: 3;
+      pointer-events: none;
     }
     
     /* Pulse animation */
     @keyframes pulse {
-      0%   { transform: scale(1.00); opacity: 0.9; }
-      50%  { transform: scale(1.05); opacity: 1.0; }
-      100% { transform: scale(1.00); opacity: 0.9; }
+      0%   { transform: scale(1.00); opacity: 0.92; }
+      50%  { transform: scale(1.03); opacity: 1.0; }
+      100% { transform: scale(1.00); opacity: 0.92; }
     }
 
     /* Popup Styling - WOW-ish! */
@@ -207,8 +230,12 @@
 
   <div id="loading-screen">
     <div class="loading-bg"></div>
-    <img src="assets/loadinglogo.png" alt="Loading…" class="loading-pulse">
+    <div class="loading-content">
+      <img src="assets/loadinglogo.png" alt="Loading…" class="loading-pulse">
+      <div class="loading-text">Loading...</div>
+    </div>
   </div>
+
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
