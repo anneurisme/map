@@ -161,7 +161,6 @@
   </style>
 </head>
 <body>
-  <!-- Top bar with dropdown -->
   <div id="top-bar">
     <div class="top-left">
       <img src="assets/logo.png" alt="Logo" class="top-logo">
@@ -206,7 +205,6 @@
     var imageOverlay = L.imageOverlay(imageUrl, mapBounds).addTo(map);
     map.fitBounds(mapBounds);
 
-    // Icon factories ------
     // Zoomed-out emoji dot
     function makeEmojiDot(emoji) {
       var em = emoji || '•'; // fallback if Type is empty
@@ -232,11 +230,11 @@
       });
     }
 
-    // Zoom-based icon switching -----
+
     // Switch from emoji-only to emoji+label at/above this zoom
     var iconSwitchZoom = 0;
 
-    // Will hold: { marker, zoomOutIcon, zoomInIcon, meta... }
+    // Will hold:  marker, zoomOutIcon, zoomInIcon, meta, etc
     var markers = [];
 
     function updateIconsForZoom() {
@@ -265,7 +263,7 @@
       clearExistingMarkers(); // clear old ones when reloading
 
       sheetMarkers.forEach(function (row) {
-        // Expecting: { owner, title, info, x, y, type }
+        // Expecting: owner, title, info, x, y, type 
         var owner = row.owner || '';
         var title = row.title || 'Unknown';
         var info  = row.info  || '';
@@ -318,7 +316,7 @@
       updateIconsForZoom();
     }
 
-    // Load a neighborhood (sheet) by name
+    // Load a neighborhood/sheet by name
     function loadNeighborhood(sheetName) {
       showLoadingScreen();
 
