@@ -325,6 +325,7 @@
 
     function updateIconsForZoom() {
       var currentZoom = map.getZoom();
+    
       markers.forEach(function (obj) {
         if (currentZoom >= iconSwitchZoom) {
           obj.marker.setIcon(obj.zoomInIcon);
@@ -332,6 +333,12 @@
           obj.marker.setIcon(obj.zoomOutIcon);
         }
       });
+    
+      // Reapply search highlighting after icons change
+      var searchInput = document.getElementById('search-input');
+      if (searchInput && searchInput.value.trim() !== '') {
+        applySearchHighlight(searchInput.value);
+      }
     }
 
     map.on('zoomend', updateIconsForZoom);
