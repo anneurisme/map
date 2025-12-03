@@ -409,9 +409,9 @@
       updateIconsForZoom();
 
       // Re-apply any current search filter after new data loads
-      var searchInput = document.getElementById('search-input');
-      if (searchInput) {
-        applySearchHighlight(searchInput.value);
+      var searchInputLocal = document.getElementById('search-input');
+      if (searchInputLocal) {
+        applySearchHighlight(searchInputLocal.value);
       }
     }
 
@@ -490,14 +490,31 @@
 
     // Hook up search input
     var searchInput = document.getElementById('search-input');
-    searchInput.addEventListener('input', function (e) {
-      applySearchHighlight(e.target.value);
-    });
-    searchInput.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-      }
-    });
+    if (searchInput) {
+      // Apply highlighting while typing
+      searchInput.addEventListener('input', function (e) {
+        applySearchHighlight(e.target.value);
+      });
+
+      // Prevent Enter from submitting / doing anything odd
+      searchInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+        }
+      });
+
+      // Block automatic focus (from load/zoom/etc.)
+      searchInput.addEventListener('focus', function () {
+        if (!searchInput.dataset.allowFocus) {
+          searchInput.blur();
+        }
+      });
+
+      // Allow normal focus only when user manually clicks
+      searchInput.addEventListener('mousedown', function () {
+        searchInput.dataset.allowFocus = 'true';
+      });
+    }
 
     // Initial load
     window.addEventListener('load', function () {
