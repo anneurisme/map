@@ -35,6 +35,7 @@
       border: 1px solid rgba(255,255,255,0.6);
       white-space: nowrap;
       position: relative;
+      transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
     }
 
     .label-with-emoji .label-emoji {
@@ -54,6 +55,18 @@
       line-height: 18px;
       text-align: center;
       text-shadow: 0 0 3px rgba(0,0,0,0.8);
+      transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+    }
+
+    /* Highlight / dim marker states */
+    .marker-highlight {
+      transform: scale(1.12);
+      filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.9));
+      opacity: 1;
+    }
+
+    .marker-dim {
+      opacity: 0.25;
     }
 
     /* FULLSCREEN LOADING OVERLAY */
@@ -67,14 +80,16 @@
       justify-content: center;
     }
     
+    /* Fullscreen background */
     #loading-screen .loading-bg {
       position: absolute;
       inset: 0;
       background: url('assets/loadingbackground.png') center/cover no-repeat rgba(0,0,0,0.85);
-      filter: brightness(0.4) blur(2px);
+      filter: brightness(0.4) blur(2px); /* dark + slight blur */
       z-index: 1;
     }
 
+    /* Wrapper for logo + text */
     .loading-content {
       position: relative;
       z-index: 2;
@@ -84,6 +99,7 @@
       justify-content: center;
     }
     
+    /* The pulsing logo (animation only) */
     .loading-pulse {
       position: relative;
       opacity: 0.9;
@@ -91,6 +107,7 @@
       filter: drop-shadow(0 0 8px rgba(0,0,0,0.7));
     }
 
+    /* Force the logo to 400x400 */
     #loading-screen img.loading-pulse {
       width: 400px !important;
       height: 400px !important;
@@ -100,8 +117,10 @@
       display: block;
     }
 
-    .loading-text {    
-      font-size: 40px;
+    /* Loading text over/under the logo */
+    .loading-text {
+      margin-top: -40px;              /* pulls text slightly over bottom of logo */
+      font-size: 32px;
       color: #ffffff;
       font-family: Arial, sans-serif;
       text-shadow: 0 0 10px rgba(0,0,0,0.9);
@@ -205,6 +224,25 @@
       border-color: #ffffff;
     }
 
+    /* Search box styling */
+    #search-input {
+      background: #111;
+      color: #f5f5f5;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 13px;
+      font-family: Arial, sans-serif;
+      min-width: 160px;
+    }
+    #search-input::placeholder {
+      color: #888;
+    }
+    #search-input:focus {
+      outline: none;
+      border-color: #ffffff;
+    }
+
   </style>
 </head>
 <body>
@@ -219,6 +257,7 @@
         <option value="Neighborhood 1">Neighborhood 1</option>
         <option value="Neighborhood 2">Neighborhood 2</option>
       </select>
+      <input id="search-input" type="text" placeholder="Search plots...">
     </div>
   </div>
 
@@ -226,7 +265,7 @@
     <div class="loading-bg"></div>
     <div class="loading-content">
       <img src="assets/loadinglogo.png" alt="Loading…" class="loading-pulse">
-      <div class="loading-text">LOADING</div>
+      <div class="loading-text">Loading...</div>
     </div>
   </div>
 
@@ -367,6 +406,9 @@
       });
 
       updateIconsForZoom();
+      // Re-apply any current search filter after new data loads
+      const searchValue = document.getElementById('search-input').value || '';
+      applySearchHighlight(searchValue);
     }
 
     // Load a neighborhood/sheet by name
@@ -393,11 +435,65 @@
         });
     }
 
+    // Search / highlight logic
+    function applySearchHighlight(query) {
+      var q = (query || '').trim().toLowerCase();
+
+      var firstMatch = null;
+
+      markers.forEach(function (obj) {
+        var text = (
+          (obj.title || '') + ' ' +
+          (obj.owner || '') + ' ' +
+          (obj.info || '')
+        ).toLowerCase();
+
+        var isMatch = q && text.indexOf(q) !== -1;
+
+        var iconEl = obj.marker.getElement();
+        if (!iconEl) return;
+
+        iconEl.classList.remove('marker-highlight', 'marker-dim');
+
+        if (!q) {
+          // No query: show everything normally
+          obj.marker.setZIndexOffset(0);
+          return;
+        }
+
+        if (isMatch) {
+          iconEl.classList.add('marker-highlight');
+          obj.marker.setZIndexOffset(500);
+          if (!firstMatch) firstMatch = obj;
+        } else {
+          iconEl.classList.add('marker-dim');
+          obj.marker.setZIndexOffset(0);
+        }
+      });
+
+      // Pan to first match, if any
+      if (q && firstMatch) {
+        map.panTo([firstMatch.x, firstMatch.y]);
+      }
+    }
+
     // Hook up dropdown
     var neighborhoodSelect = document.getElementById('neighborhood-select');
     neighborhoodSelect.addEventListener('change', function (e) {
       var sheetName = e.target.value;
       loadNeighborhood(sheetName);
+    });
+
+    // Hook up search input
+    var searchInput = document.getElementById('search-input');
+    searchInput.addEventListener('input', function (e) {
+      applySearchHighlight(e.target.value);
+    });
+    // Optional: Enter key just keeps focus (no submit)
+    searchInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+      }
     });
 
     // Initial load
