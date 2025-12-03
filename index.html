@@ -281,19 +281,20 @@
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     const DATA_URL = 'https://script.google.com/macros/s/AKfycbx4mYuCwK4vJzNZ9tGvc0I_xvtBkQ2XyobdeTKmR0RT_1_WOi4dLNPVEScFxrvrUWVFMQ/exec';
-
+  
     function showLoadingScreen() {
       const el = document.getElementById('loading-screen');
       if (el) el.style.display = 'flex';
     }
-
+  
     function hideLoadingScreen() {
       const el = document.getElementById('loading-screen');
       if (el) el.style.display = 'none';
     }
-
+  
     // Map setup
     var mapBounds = [[0, 0], [2560, 3840]];
     var map = L.map('map', {
@@ -302,11 +303,11 @@
       maxZoom: 4,
       attributionControl: false
     });
-
+  
     var imageUrl = 'assets/map.jpg';
     var imageOverlay = L.imageOverlay(imageUrl, mapBounds).addTo(map);
     map.fitBounds(mapBounds);
-
+  
     // Zoomed-out emoji dot
     function makeEmojiDot(emoji) {
       var em = emoji || '•'; // fallback if Type is empty
@@ -316,7 +317,7 @@
         iconSize: [18, 18]
       });
     }
-
+  
     // Zoomed-in label with emoji + title
     function makeEmojiLabel(emoji, text) {
       var em = emoji || '';
@@ -331,16 +332,16 @@
         iconSize: [80, 22]
       });
     }
-
+  
     // Switch from emoji-only to emoji+label at/above this zoom
     var iconSwitchZoom = 0;
-
+  
     // Will hold: marker, zoomOutIcon, zoomInIcon, meta, etc
     var markers = [];
-
+  
     function updateIconsForZoom() {
       var currentZoom = map.getZoom();
-
+  
       markers.forEach(function (obj) {
         if (currentZoom >= iconSwitchZoom) {
           obj.marker.setIcon(obj.zoomInIcon);
@@ -348,16 +349,16 @@
           obj.marker.setIcon(obj.zoomOutIcon);
         }
       });
-
-      // Reapply search highlighting after icons change, without panning
+  
+      // Reapply search highlighting after icons change (no panning)
       var searchInput = document.getElementById('search-input');
       if (searchInput && searchInput.value.trim() !== '') {
-        applySearchHighlight(searchInput.value, false);
+        applySearchHighlight(searchInput.value);
       }
     }
-
+  
     map.on('zoomend', updateIconsForZoom);
-
+  
     // Remove existing markers from map
     function clearExistingMarkers() {
       markers.forEach(function (obj) {
@@ -365,11 +366,11 @@
       });
       markers = [];
     }
-
+  
     // Create markers from sheet data
     function createMarkersFromData(sheetMarkers) {
       clearExistingMarkers(); // clear old ones when reloading
-
+  
       sheetMarkers.forEach(function (row) {
         // Expecting: owner, title, info, x, y, type 
         var owner = row.owner || '';
@@ -378,23 +379,23 @@
         var x     = parseFloat(row.x);
         var y     = parseFloat(row.y);
         var type  = row.type  || ''; // emoji from Type column
-
+  
         if (isNaN(x) || isNaN(y)) {
           console.warn('Skipping row with invalid coords:', row);
           return;
         }
-
+  
         var position = [x, y];
-
+  
         var zoomOutIcon = makeEmojiDot(type);
         var zoomInIcon  = makeEmojiLabel(type, title);
-
+  
         var marker = L.marker(position, { icon: zoomOutIcon }).addTo(map);
-
+  
         var infoHtml  = info ? info.replace(/\n/g, '<br>') : '';
         var ownerHtml = owner ? '<i>' + owner + '</i>' : '';
         var divider   = (owner && infoHtml) ? '<hr class="popup-divider">' : '';
-
+  
         var popupHtml =
           '<div class="custom-popup">' +
             '<span class="title-pop">' + title + '</span><br>' +
@@ -402,12 +403,12 @@
             divider +
             infoHtml +
           '</div>';
-
+  
         marker
           .bindPopup(popupHtml, { autoClose: false })
           .on('mouseover', function () { this.openPopup(); })
           .on('mouseout', function () { this.closePopup(); });
-
+  
         markers.push({
           marker: marker,
           zoomOutIcon: zoomOutIcon,
@@ -420,22 +421,22 @@
           type: type
         });
       });
-
+  
       updateIconsForZoom();
-
-      // Re-apply any current search filter after new data loads, without panning
+  
+      // Re-apply any current search filter after new data loads (no panning)
       var searchInputLocal = document.getElementById('search-input');
-      if (searchInputLocal) {
-        applySearchHighlight(searchInputLocal.value, false);
+      if (searchInputLocal && searchInputLocal.value.trim() !== '') {
+        applySearchHighlight(searchInputLocal.value);
       }
     }
-
+  
     // Load a neighborhood/sheet by name
     function loadNeighborhood(sheetName) {
       showLoadingScreen();
-
+  
       var url = DATA_URL + '?sheet=' + encodeURIComponent(sheetName);
-
+  
       fetch(url)
         .then(function (response) {
           if (!response.ok) {
@@ -453,73 +454,64 @@
           hideLoadingScreen();
         });
     }
-
-    // Search / highlight logic
-    function applySearchHighlight(query, shouldPan) {
+  
+    // Search / highlight logic (NO PANNING)
+    function applySearchHighlight(query) {
       var q = (query || '').trim().toLowerCase();
-      var panToMatch = (shouldPan === undefined) ? true : shouldPan;
-
-      var firstMatch = null;
-
+  
       markers.forEach(function (obj) {
         var text = (
           (obj.title || '') + ' ' +
           (obj.owner || '') + ' ' +
           (obj.info || '')
         ).toLowerCase();
-
+  
         var isMatch = q && text.indexOf(q) !== -1;
-
+  
         var iconEl = obj.marker.getElement();
         if (!iconEl) return;
-
+  
         iconEl.classList.remove('marker-highlight', 'marker-dim');
-
+  
         if (!q) {
           // No query: show everything normally
           obj.marker.setZIndexOffset(0);
           return;
         }
-
+  
         if (isMatch) {
           iconEl.classList.add('marker-highlight');
           obj.marker.setZIndexOffset(500);
-          if (!firstMatch) firstMatch = obj;
         } else {
           iconEl.classList.add('marker-dim');
           obj.marker.setZIndexOffset(0);
         }
       });
-
-      // Pan to first match ONLY when user is actively typing
-      if (panToMatch && q && firstMatch) {
-        map.panTo([firstMatch.x, firstMatch.y]);
-      }
     }
-
+  
     // Hook up dropdown
     var neighborhoodSelect = document.getElementById('neighborhood-select');
     neighborhoodSelect.addEventListener('change', function (e) {
       var sheetName = e.target.value;
       loadNeighborhood(sheetName);
     });
-
-    // Hook up search input (+ faux focus)
+  
+    // Hook up search input (+ faux visual focus)
     var searchInput = document.getElementById('search-input');
     if (searchInput) {
-      // Apply highlighting while typing, with pan
+      // Apply highlighting while typing
       searchInput.addEventListener('input', function (e) {
-        applySearchHighlight(e.target.value, true);
+        applySearchHighlight(e.target.value);
       });
-
+  
       // Prevent Enter from doing anything odd
       searchInput.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') {
           e.preventDefault();
         }
       });
-
-      // Faux-focus visual only (doesn't affect browser behavior)
+  
+      // Visual-only focus state
       searchInput.addEventListener('focus', function () {
         searchInput.classList.add('search-visual-focus');
       });
@@ -527,11 +519,12 @@
         searchInput.classList.remove('search-visual-focus');
       });
     }
-
+  
     // Initial load
     window.addEventListener('load', function () {
       loadNeighborhood('Neighborhood 1');
     });
   </script>
+
 </body>
 </html>
