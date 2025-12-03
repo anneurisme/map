@@ -246,7 +246,7 @@
       outline: none;
     }
 
-    /* Faux-focus visual style */
+    /* Focus style */
     #search-input.search-visual-focus {
       border-color: #ffffff;
       box-shadow: 0 0 6px rgba(255,255,255,0.5);
@@ -350,7 +350,7 @@
         }
       });
   
-      // Reapply search highlighting after icons change (no panning)
+      // Reapply search highlight
       var searchInput = document.getElementById('search-input');
       if (searchInput && searchInput.value.trim() !== '') {
         applySearchHighlight(searchInput.value);
@@ -369,7 +369,7 @@
   
     // Create markers from sheet data
     function createMarkersFromData(sheetMarkers) {
-      clearExistingMarkers(); // clear old ones when reloading
+      clearExistingMarkers();
   
       sheetMarkers.forEach(function (row) {
         // Expecting: owner, title, info, x, y, type 
@@ -455,7 +455,7 @@
         });
     }
   
-    // Search / highlight logic (NO PANNING)
+    // Search and Highlight
     function applySearchHighlight(query) {
       var q = (query || '').trim().toLowerCase();
   
@@ -474,7 +474,6 @@
         iconEl.classList.remove('marker-highlight', 'marker-dim');
   
         if (!q) {
-          // No query: show everything normally
           obj.marker.setZIndexOffset(0);
           return;
         }
@@ -489,14 +488,14 @@
       });
     }
   
-    // Hook up dropdown
+    // Connect Dropdown
     var neighborhoodSelect = document.getElementById('neighborhood-select');
     neighborhoodSelect.addEventListener('change', function (e) {
       var sheetName = e.target.value;
       loadNeighborhood(sheetName);
     });
   
-    // Hook up search input (+ faux visual focus)
+    // Connect search input
     var searchInput = document.getElementById('search-input');
     if (searchInput) {
       // Apply highlighting while typing
@@ -504,14 +503,14 @@
         applySearchHighlight(e.target.value);
       });
   
-      // Prevent Enter from doing anything odd
+      // Handle Enter key
       searchInput.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') {
           e.preventDefault();
         }
       });
   
-      // Visual-only focus state
+      // Focus states
       searchInput.addEventListener('focus', function () {
         searchInput.classList.add('search-visual-focus');
       });
