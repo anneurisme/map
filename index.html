@@ -80,16 +80,14 @@
       justify-content: center;
     }
     
-    /* Fullscreen background */
     #loading-screen .loading-bg {
       position: absolute;
       inset: 0;
       background: url('assets/loadingbackground.png') center/cover no-repeat rgba(0,0,0,0.85);
-      filter: brightness(0.4) blur(2px); /* dark + slight blur */
+      filter: brightness(0.4) blur(2px);
       z-index: 1;
     }
 
-    /* Wrapper for logo + text */
     .loading-content {
       position: relative;
       z-index: 2;
@@ -99,7 +97,6 @@
       justify-content: center;
     }
     
-    /* The pulsing logo (animation only) */
     .loading-pulse {
       position: relative;
       opacity: 0.9;
@@ -107,7 +104,6 @@
       filter: drop-shadow(0 0 8px rgba(0,0,0,0.7));
     }
 
-    /* Force the logo to 400x400 */
     #loading-screen img.loading-pulse {
       width: 400px !important;
       height: 400px !important;
@@ -117,10 +113,8 @@
       display: block;
     }
 
-    /* Loading text over/under the logo */
-    .loading-text {
-      margin-top: -40px;              /* pulls text slightly over bottom of logo */
-      font-size: 32px;
+    .loading-text {    
+      font-size: 40px;
       color: #ffffff;
       font-family: Arial, sans-serif;
       text-shadow: 0 0 10px rgba(0,0,0,0.9);
@@ -265,7 +259,7 @@
     <div class="loading-bg"></div>
     <div class="loading-content">
       <img src="assets/loadinglogo.png" alt="Loading…" class="loading-pulse">
-      <div class="loading-text">Loading...</div>
+      <div class="loading-text">LOADING</div>
     </div>
   </div>
 
@@ -406,9 +400,12 @@
       });
 
       updateIconsForZoom();
+
       // Re-apply any current search filter after new data loads
-      const searchValue = document.getElementById('search-input').value || '';
-      applySearchHighlight(searchValue);
+      var searchInput = document.getElementById('search-input');
+      if (searchInput) {
+        applySearchHighlight(searchInput.value);
+      }
     }
 
     // Load a neighborhood/sheet by name
@@ -489,7 +486,6 @@
     searchInput.addEventListener('input', function (e) {
       applySearchHighlight(e.target.value);
     });
-    // Optional: Enter key just keeps focus (no submit)
     searchInput.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') {
         e.preventDefault();
