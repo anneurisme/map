@@ -35,7 +35,6 @@
       border: 1px solid rgba(255,255,255,0.6);
       white-space: nowrap;
       position: relative;
-      transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
     }
 
     .label-with-emoji .label-emoji {
@@ -55,27 +54,6 @@
       line-height: 18px;
       text-align: center;
       text-shadow: 0 0 3px rgba(0,0,0,0.8);
-      transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease, font-size 0.15s ease;
-    }
-
-    /* Highlight / dim marker states */
-    .marker-highlight {
-      filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.9));
-      opacity: 1;
-    }
-
-    /* Actually scale the inner content, not the Leaflet wrapper */
-    .marker-highlight .emoji-dot {
-      font-size: 26px;   /* bigger emoji when highlighted */
-      line-height: 26px;
-    }
-
-    .marker-highlight .label-with-emoji {
-      transform: scale(1.4);
-    }
-
-    .marker-dim {
-      opacity: 0.45;
     }
 
     /* FULLSCREEN LOADING OVERLAY */
@@ -227,25 +205,6 @@
       border-color: #ffffff;
     }
 
-    /* Search box styling */
-    #search-input {
-      background: #111;
-      color: #f5f5f5;
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      border-radius: 4px;
-      padding: 4px 8px;
-      font-size: 13px;
-      font-family: Arial, sans-serif;
-      min-width: 160px;
-    }
-    #search-input::placeholder {
-      color: #888;
-    }
-    #search-input:focus {
-      outline: none;
-      border-color: #ffffff;
-    }
-
   </style>
 </head>
 <body>
@@ -260,7 +219,6 @@
         <option value="Neighborhood 1">Neighborhood 1</option>
         <option value="Neighborhood 2">Neighborhood 2</option>
       </select>
-      <input id="search-input" type="text" placeholder="Search plots...">
     </div>
   </div>
 
@@ -334,7 +292,6 @@
 
     function updateIconsForZoom() {
       var currentZoom = map.getZoom();
-    
       markers.forEach(function (obj) {
         if (currentZoom >= iconSwitchZoom) {
           obj.marker.setIcon(obj.zoomInIcon);
@@ -342,12 +299,6 @@
           obj.marker.setIcon(obj.zoomOutIcon);
         }
       });
-    
-      // Reapply search highlighting after icons change, without panning
-      var searchInput = document.getElementById('search-input');
-      if (searchInput && searchInput.value.trim() !== '') {
-        applySearchHighlight(searchInput.value, false);
-      }
     }
 
     map.on('zoomend', updateIconsForZoom);
@@ -416,12 +367,6 @@
       });
 
       updateIconsForZoom();
-
-      // Re-apply any current search filter after new data loads, without panning
-      var searchInputLocal = document.getElementById('search-input');
-      if (searchInputLocal) {
-        applySearchHighlight(searchInputLocal.value, false);
-      }
     }
 
     // Load a neighborhood/sheet by name
@@ -448,71 +393,12 @@
         });
     }
 
-    // Search / highlight logic
-    function applySearchHighlight(query, shouldPan) {
-      var q = (query || '').trim().toLowerCase();
-      var panToMatch = (shouldPan === undefined) ? true : shouldPan;
-
-      var firstMatch = null;
-
-      markers.forEach(function (obj) {
-        var text = (
-          (obj.title || '') + ' ' +
-          (obj.owner || '') + ' ' +
-          (obj.info || '')
-        ).toLowerCase();
-
-        var isMatch = q && text.indexOf(q) !== -1;
-
-        var iconEl = obj.marker.getElement();
-        if (!iconEl) return;
-
-        iconEl.classList.remove('marker-highlight', 'marker-dim');
-
-        if (!q) {
-          // No query: show everything normally
-          obj.marker.setZIndexOffset(0);
-          return;
-        }
-
-        if (isMatch) {
-          iconEl.classList.add('marker-highlight');
-          obj.marker.setZIndexOffset(500);
-          if (!firstMatch) firstMatch = obj;
-        } else {
-          iconEl.classList.add('marker-dim');
-          obj.marker.setZIndexOffset(0);
-        }
-      });
-
-      // Pan to first match ONLY when user is actively searching
-      if (panToMatch && q && firstMatch) {
-        map.panTo([firstMatch.x, firstMatch.y]);
-      }
-    }
-
     // Hook up dropdown
     var neighborhoodSelect = document.getElementById('neighborhood-select');
     neighborhoodSelect.addEventListener('change', function (e) {
       var sheetName = e.target.value;
       loadNeighborhood(sheetName);
     });
-
-    // Hook up search input
-    var searchInput = document.getElementById('search-input');
-    if (searchInput) {
-      // Apply highlighting while typing, with pan
-      searchInput.addEventListener('input', function (e) {
-        applySearchHighlight(e.target.value, true);
-      });
-
-      // Prevent Enter from doing anything odd
-      searchInput.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-        }
-      });
-    }
 
     // Initial load
     window.addEventListener('load', function () {
