@@ -55,14 +55,23 @@
       line-height: 18px;
       text-align: center;
       text-shadow: 0 0 3px rgba(0,0,0,0.8);
-      transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+      transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease, font-size 0.15s ease;
     }
 
     /* Highlight / dim marker states */
     .marker-highlight {
-      transform: scale(1.6);
       filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.9));
       opacity: 1;
+    }
+
+    /* Actually scale the inner content, not the Leaflet wrapper */
+    .marker-highlight .emoji-dot {
+      font-size: 26px;   /* bigger emoji when highlighted */
+      line-height: 26px;
+    }
+
+    .marker-highlight .label-with-emoji {
+      transform: scale(1.2);
     }
 
     .marker-dim {
@@ -334,10 +343,10 @@
         }
       });
     
-      // Reapply search highlighting after icons change
+      // Reapply search highlighting after icons change, without panning
       var searchInput = document.getElementById('search-input');
       if (searchInput && searchInput.value.trim() !== '') {
-        applySearchHighlight(searchInput.value);
+        applySearchHighlight(searchInput.value, false);
       }
     }
 
@@ -408,10 +417,10 @@
 
       updateIconsForZoom();
 
-      // Re-apply any current search filter after new data loads
+      // Re-apply any current search filter after new data loads, without panning
       var searchInputLocal = document.getElementById('search-input');
       if (searchInputLocal) {
-        applySearchHighlight(searchInputLocal.value);
+        applySearchHighlight(searchInputLocal.value, false);
       }
     }
 
@@ -440,8 +449,9 @@
     }
 
     // Search / highlight logic
-    function applySearchHighlight(query) {
+    function applySearchHighlight(query, shouldPan) {
       var q = (query || '').trim().toLowerCase();
+      var panToMatch = (shouldPan === undefined) ? true : shouldPan;
 
       var firstMatch = null;
 
@@ -475,8 +485,8 @@
         }
       });
 
-      // Pan to first match, if any
-      if (q && firstMatch) {
+      // Pan to first match ONLY when user is actively searching
+      if (panToMatch && q && firstMatch) {
         map.panTo([firstMatch.x, firstMatch.y]);
       }
     }
@@ -491,28 +501,16 @@
     // Hook up search input
     var searchInput = document.getElementById('search-input');
     if (searchInput) {
-      // Apply highlighting while typing
+      // Apply highlighting while typing, with pan
       searchInput.addEventListener('input', function (e) {
-        applySearchHighlight(e.target.value);
+        applySearchHighlight(e.target.value, true);
       });
 
-      // Prevent Enter from submitting / doing anything odd
+      // Prevent Enter from doing anything odd
       searchInput.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') {
           e.preventDefault();
         }
-      });
-
-      // Block automatic focus (from load/zoom/etc.)
-      searchInput.addEventListener('focus', function () {
-        if (!searchInput.dataset.allowFocus) {
-          searchInput.blur();
-        }
-      });
-
-      // Allow normal focus only when user manually clicks
-      searchInput.addEventListener('mousedown', function () {
-        searchInput.dataset.allowFocus = 'true';
       });
     }
 
