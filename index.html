@@ -294,14 +294,10 @@
       background: rgba(255, 255, 255, 0.3);
     }
 
-    #drawer-title {
-      margin-top: 8px;
-    }
-
     #drawer-chevron {
-      margin-left: 8px;
       font-size: 11px;
       opacity: 0.9;
+      margin-top: 8px;
     }
 
     #drawer-body {
@@ -313,42 +309,8 @@
       box-sizing: border-box;
     }
 
+    /* Details LEFT */
     .drawer-left {
-      flex: 0 0 55%;
-      border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      background: radial-gradient(circle at top, #222 0, #050505 60%);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    #drawer-images {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px;
-      overflow-x: auto;
-      box-sizing: border-box;
-    }
-
-    #drawer-images img {
-      max-height: 150px;
-      width: auto;
-      border-radius: 4px;
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      flex-shrink: 0;
-      object-fit: contain;
-    }
-
-    #drawer-images-placeholder {
-      padding: 8px 10px;
-      font-size: 12px;
-      color: #aaa;
-    }
-
-    .drawer-right {
       flex: 1;
       border-radius: 6px;
       border: 1px solid rgba(255, 255, 255, 0.16);
@@ -381,16 +343,97 @@
       overflow-y: auto;
     }
 
+    /* Thumbnails RIGHT */
+    .drawer-right {
+      flex: 0 0 55%;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: radial-gradient(circle at top, #222 0, #050505 60%);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #drawer-images {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px;
+      overflow-x: auto;
+      box-sizing: border-box;
+    }
+
+    #drawer-images img {
+      max-height: 150px;
+      width: auto;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      flex-shrink: 0;
+      object-fit: contain;
+      cursor: pointer;
+    }
+
+    #drawer-images-placeholder {
+      padding: 8px 10px;
+      font-size: 12px;
+      color: #aaa;
+    }
+
     @media (max-width: 800px) {
       #drawer-body {
         flex-direction: column;
       }
-      .drawer-left {
+      .drawer-right {
         flex: 0 0 auto;
       }
       #drawer-images img {
         max-height: 110px;
       }
+    }
+
+    /* Fullscreen lightbox for clicked thumbnails */
+    #image-lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.92);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+
+    .lightbox-inner {
+      position: relative;
+      max-width: 90vw;
+      max-height: 90vh;
+    }
+
+    .lightbox-inner img {
+      max-width: 100%;
+      max-height: 100%;
+      display: block;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.9);
+    }
+
+    #lightbox-close {
+      position: absolute;
+      top: -12px;
+      right: -12px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(0, 0, 0, 0.85);
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 10px rgba(0,0,0,0.9);
     }
   </style>
 </head>
@@ -423,19 +466,28 @@
   <!-- Bottom Drawer integrated on the same page -->
   <div id="bottom-drawer" class="collapsed">
     <div id="drawer-header">
-      <span id="drawer-title">Plot Images</span>
       <span id="drawer-chevron">▲</span>
     </div>
     <div id="drawer-body">
+      <!-- DETAILS LEFT -->
       <div class="drawer-left">
-        <div id="drawer-images"></div>
-        <div id="drawer-images-placeholder">Click a plot marker to view any available images.</div>
-      </div>
-      <div class="drawer-right">
         <div id="drawer-plot-title">No plot selected</div>
         <div id="drawer-plot-owner"></div>
         <div id="drawer-plot-info"></div>
       </div>
+      <!-- THUMBNAILS RIGHT -->
+      <div class="drawer-right">
+        <div id="drawer-images"></div>
+        <div id="drawer-images-placeholder">Click a plot marker to view any available images.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fullscreen lightbox -->
+  <div id="image-lightbox">
+    <div class="lightbox-inner">
+      <img id="lightbox-image" src="" alt="Plot image">
+      <button id="lightbox-close" type="button">×</button>
     </div>
   </div>
 
@@ -546,11 +598,10 @@
       markers = [];
     }
 
-    //  Bottom drawer
+    // Bottom drawer
     const bottomDrawer = document.getElementById('bottom-drawer');
     const drawerHeader = document.getElementById('drawer-header');
     const drawerChevron = document.getElementById('drawer-chevron');
-    const drawerTitle   = document.getElementById('drawer-title');
     const drawerImages  = document.getElementById('drawer-images');
     const drawerImagesPlaceholder = document.getElementById('drawer-images-placeholder');
     const drawerPlotTitle = document.getElementById('drawer-plot-title');
@@ -567,15 +618,35 @@
       drawerChevron.textContent = '▼';
     }
 
-    // Try to infer a plot number
-    function extractPlotNumber(row, rawTitle) {
-      if (row.plot != null && row.plot !== '') return row.plot;
-      if (row.plotNumber != null && row.plotNumber !== '') return row.plotNumber;
-      if (row.plot_no != null && row.plot_no !== '') return row.plot_no;
+    // Lightbox
+    const lightbox       = document.getElementById('image-lightbox');
+    const lightboxImage  = document.getElementById('lightbox-image');
+    const lightboxClose  = document.getElementById('lightbox-close');
 
-      // Fallback: first number found in the title
-      var m = (rawTitle || '').match(/(\d+)/);
-      return m ? m[1] : null;
+    function openLightbox(src) {
+      lightboxImage.src = src;
+      lightbox.style.display = 'flex';
+    }
+
+    function closeLightbox() {
+      lightbox.style.display = 'none';
+      lightboxImage.src = '';
+    }
+
+    lightboxClose.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', function (e) {
+      if (e.target === lightbox) closeLightbox();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeLightbox();
+    });
+
+    // owner is plot#
+    function extractPlotNumber(row, rawTitle) {
+      if (row.owner !== undefined && row.owner !== null && String(row.owner).trim() !== '') {
+        return String(row.owner).trim();
+      }
+      return null;
     }
 
     // Load plot images from /assets/plots/SUB-PLOT-N.jpg
@@ -584,18 +655,22 @@
       drawerImagesPlaceholder.style.display = 'block';
       drawerImagesPlaceholder.textContent = 'Looking for images for this plot...';
 
+      var sub = subIndex || 0;
+
       drawerPlotTitle.textContent = title || 'Plot';
-      drawerPlotOwner.textContent = owner ? ('Owner: ' + owner) : '';
+
+      if (plotNumber != null && plotNumber !== '') {
+        drawerPlotOwner.textContent = 'Subdivision ' + sub + ' · Plot ' + plotNumber;
+      } else {
+        drawerPlotOwner.textContent = '';
+      }
+
       drawerPlotInfo.innerHTML = formatInfoText(info || '');
 
       if (plotNumber == null || plotNumber === '') {
-        drawerTitle.textContent = 'Plot Images';
         drawerImagesPlaceholder.textContent = 'No plot number found for this marker.';
         return;
       }
-
-      var sub = subIndex || 0;
-      drawerTitle.textContent = 'Subdivision ' + sub + ' · Plot ' + plotNumber;
 
       var maxImages = 6;  // how many filenames to attempt
       var loadedCount = 0;
@@ -610,14 +685,19 @@
       }
 
       for (let i = 1; i <= maxImages; i++) {
-        var img = new Image();
-        var src = 'assets/plots/' + sub + '-' + plotNumber + '-' + i + '.jpg';
+        let img = new Image();
+        let src = 'assets/plots/' + sub + '-' + plotNumber + '-' + i + '.jpg';
         img.src = src;
 
         img.onload = function () {
           loadedCount++;
           drawerImagesPlaceholder.style.display = 'none';
           drawerImages.appendChild(img);
+
+          img.addEventListener('click', function () {
+            openLightbox(src);
+          });
+
           onFinishedAttempt();
         };
 
@@ -632,7 +712,7 @@
       clearExistingMarkers();
   
       sheetMarkers.forEach(function (row) {
-        var owner = row.owner || '';
+        var owner = row.owner || ''; // this is actually the plot number
         var rawTitle = row.title || 'Unknown';
         var title = rawTitle.length > 22 ? rawTitle.substring(0, 20) + '…' : rawTitle;
         var info  = row.info  || '';
@@ -653,8 +733,8 @@
         var marker = L.marker(position, { icon: zoomOutIcon }).addTo(map);
   
         var infoHtml  = formatInfoText(info);
-        var ownerHtml = owner ? '<i>' + owner + '</i>' : '';
-        var divider   = (owner && infoHtml) ? '<hr class="popup-divider">' : '';
+        var ownerHtml = plotNumber ? '<i>Plot ' + plotNumber + '</i>' : '';
+        var divider   = (ownerHtml && infoHtml) ? '<hr class="popup-divider">' : '';
   
         var popupHtml =
           '<div class="custom-popup">' +
