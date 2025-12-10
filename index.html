@@ -268,7 +268,6 @@
       height: 32px;
     }
 
-    
     #drawer-header::before {
       display: none !important;
     }
@@ -286,18 +285,6 @@
       background: linear-gradient(to top, #000 0%, #141414 60%);
     }
 
-    #drawer-header::before {
-      content: '';
-      position: absolute;
-      top: 6px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 50px;
-      height: 3px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.3);
-    }
-
     #drawer-chevron {
       font-size: 28px;
       opacity: 0.9;
@@ -313,7 +300,7 @@
       box-sizing: border-box;
     }
 
-    /* DETAILS LEFT */
+    /* DETAILS LEFT — text scaled up */
     .drawer-left {
       flex: 1;
       border-radius: 6px;
@@ -321,29 +308,29 @@
       background: rgba(8, 8, 8, 0.95);
       display: flex;
       flex-direction: column;
-      padding: 8px 10px;
+      padding: 10px 12px;
       box-sizing: border-box;
       overflow: hidden;
     }
 
     #drawer-plot-title {
-      font-size: 14px;
+      font-size: 20px;  /* was 14px */
       font-weight: 600;
       color: #fbac3a;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
 
     #drawer-plot-owner {
-      font-size: 12px;
+      font-size: 16px;  /* was 12px */
       color: #ccc;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       font-style: italic;
     }
 
     #drawer-plot-info {
-      font-size: 12px;
+      font-size: 16px;  /* was 12px */
       color: #ddd;
-      line-height: 1.4;
+      line-height: 1.5;
       overflow-y: auto;
     }
 
@@ -363,7 +350,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 6px;
+      padding: 6px 12px 6px 16px; /* more left padding so first image isn't jammed */
       overflow-x: auto;
       box-sizing: border-box;
     }
@@ -379,8 +366,8 @@
     }
 
     #drawer-images-placeholder {
-      padding: 8px 10px;
-      font-size: 12px;
+      padding: 8px 12px;
+      font-size: 14px; /* slightly larger to match other text */
       color: #aaa;
     }
 
@@ -397,7 +384,6 @@
     }
 
     /* Fullscreen lightbox for clicked thumbnails */
-    /* Fullscreen lightbox for clicked thumbnails */
     #image-lightbox {
       position: fixed;
       inset: 0;
@@ -406,7 +392,7 @@
       align-items: center;
       justify-content: center;
       z-index: 10000;
-      padding: 16px;               /* small padding so image never touches edge */
+      padding: 16px;
       box-sizing: border-box;
     }
     
@@ -419,10 +405,9 @@
       justify-content: center;
     }
     
-    /* 🚨 Force the image to always fit inside viewport */
     #image-lightbox img {
       max-width: 100% !important;
-      max-height: 80vh !important;   /* tweak this number if you want it taller/shorter */
+      max-height: 80vh !important;
       width: auto !important;
       height: auto !important;
       object-fit: contain !important;
@@ -582,7 +567,6 @@
     var currentSubdivisionIndex = 0;
 
     function getSubdivisionIndexFromName(name) {
-      // Expecting strings like "Subdivision 0"
       var m = (name || '').match(/(\d+)/);
       return m ? m[1] : 0;
     }
@@ -660,7 +644,6 @@
     function extractPlotNumber(row, rawTitle) {
       if (row.owner !== undefined && row.owner !== null) {
         let v = String(row.owner).trim();
-        // If it starts with "Plot" (any case), strip that word and following spaces
         v = v.replace(/^plot\s*/i, '');
         return v;
       }
@@ -690,16 +673,36 @@
         return;
       }
 
-      var maxImages = 6;  // how many filenames to attempt
+      var maxImages = 6;
       var loadedCount = 0;
       var attempted = 0;
 
-      function onFinishedAttempt() {
-        attempted++;
-        if (attempted >= maxImages && loadedCount === 0) {
+      // store successful loads so we can sort & append in order
+      var loadedImages = [];
+
+      function finalizeImageList() {
+        if (attempted < maxImages) return;
+
+        if (loadedCount === 0) {
           drawerImagesPlaceholder.style.display = 'block';
           drawerImagesPlaceholder.textContent = 'No images found for this plot.';
+          return;
         }
+
+        // sort by numeric index to ensure alphanumeric order
+        loadedImages.sort(function(a, b) {
+          return a.index - b.index;
+        });
+
+        drawerImages.innerHTML = '';
+        loadedImages.forEach(function(item) {
+          drawerImages.appendChild(item.img);
+        });
+      }
+
+      function onFinishedAttempt() {
+        attempted++;
+        finalizeImageList();
       }
 
       for (let i = 1; i <= maxImages; i++) {
@@ -710,12 +713,12 @@
         img.onload = function () {
           loadedCount++;
           drawerImagesPlaceholder.style.display = 'none';
-          drawerImages.appendChild(img);
 
           img.addEventListener('click', function () {
             openLightbox(src);
           });
 
+          loadedImages.push({ index: i, img: img });
           onFinishedAttempt();
         };
 
@@ -730,7 +733,7 @@
       clearExistingMarkers();
   
       sheetMarkers.forEach(function (row) {
-        var owner = row.owner || ''; // raw owner from sheet (e.g., "29" or "Plot 29")
+        var owner = row.owner || '';
         var rawTitle = row.title || 'Unknown';
         var title = rawTitle.length > 22 ? rawTitle.substring(0, 20) + '…' : rawTitle;
         var info  = row.info  || '';
@@ -767,7 +770,6 @@
           .on('mouseover', function () { this.openPopup(); })
           .on('mouseout', function () { this.closePopup(); })
           .on('click', function () {
-            // When marker is clicked, show images in the bottom drawer
             expandDrawer();
             showPlotImages(currentSubdivisionIndex, plotNumber, rawTitle, owner, info);
           });
