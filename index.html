@@ -410,12 +410,15 @@
     .lightbox-inner {
       position: relative;
       max-width: 90vw;
-      max-height: 90vh;
+      max-height: calc(100vh - 80px); /* leave room for close button / margins */
     }
-
+    
     .lightbox-inner img {
       max-width: 100%;
       max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;            /* never overflow */
       display: block;
       border-radius: 4px;
       border: 1px solid rgba(255, 255, 255, 0.4);
