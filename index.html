@@ -309,7 +309,7 @@
       box-sizing: border-box;
     }
 
-    /* Details LEFT */
+    /* DETAILS LEFT */
     .drawer-left {
       flex: 1;
       border-radius: 6px;
@@ -343,7 +343,7 @@
       overflow-y: auto;
     }
 
-    /* Thumbnails RIGHT */
+    /* THUMBNAILS RIGHT */
     .drawer-right {
       flex: 0 0 55%;
       border-radius: 6px;
@@ -641,10 +641,13 @@
       if (e.key === 'Escape') closeLightbox();
     });
 
-    // owner is plot#
+    // owner is plot#, but could be "29" or "Plot 29"
     function extractPlotNumber(row, rawTitle) {
-      if (row.owner !== undefined && row.owner !== null && String(row.owner).trim() !== '') {
-        return String(row.owner).trim();
+      if (row.owner !== undefined && row.owner !== null) {
+        let v = String(row.owner).trim();
+        // If it starts with "Plot" (any case), strip that word and following spaces
+        v = v.replace(/^plot\s*/i, '');
+        return v;
       }
       return null;
     }
@@ -712,7 +715,7 @@
       clearExistingMarkers();
   
       sheetMarkers.forEach(function (row) {
-        var owner = row.owner || ''; // this is actually the plot number
+        var owner = row.owner || ''; // raw owner from sheet (e.g., "29" or "Plot 29")
         var rawTitle = row.title || 'Unknown';
         var title = rawTitle.length > 22 ? rawTitle.substring(0, 20) + '…' : rawTitle;
         var info  = row.info  || '';
