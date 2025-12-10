@@ -71,7 +71,7 @@
     }
 
     .marker-highlight .label-with-emoji {
-      transform: scale(1.5);
+      transform: scale(1.8);
     }
 
     .marker-dim {
@@ -261,10 +261,10 @@
       <div class="top-title">KoG Housing</div>
     </div>
     <div class="top-right">
-      <span style="font-size:12px;">Select Map:</span>
       <select id="neighborhood-select">
-        <option value="Neighborhood 1">Neighborhood 1</option>
-        <option value="Neighborhood 2">Neighborhood 2</option>
+        <option value="Subdivision 0">Subdivision 0</option>
+        <option value="Subdivision 1">Subdivision 1</option>
+        <option value="Subdivision 2">Subdivision 2</option>
       </select>
       <input id="search-input" type="text" placeholder="Search plots...">
     </div>
@@ -281,7 +281,6 @@
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     const DATA_URL = 'https://script.google.com/macros/s/AKfycbx4mYuCwK4vJzNZ9tGvc0I_xvtBkQ2XyobdeTKmR0RT_1_WOi4dLNPVEScFxrvrUWVFMQ/exec';
   
@@ -293,6 +292,32 @@
     function hideLoadingScreen() {
       const el = document.getElementById('loading-screen');
       if (el) el.style.display = 'none';
+    }
+
+    // Markup Formatting
+    function formatInfoText(raw) {
+      if (!raw) return '';
+
+      // Escape HTML
+      let txt = raw
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      // Preserve line breaks
+      txt = txt.replace(/\r\n|\r|\n/g, '<br>');
+      // ***bold+italic***
+      txt = txt.replace(/\*\*\*([\s\S]+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+      // **bold**
+      txt = txt.replace(/\*\*([\s\S]+?)\*\*/g, '<strong>$1</strong>');
+      // *italic*
+      txt = txt.replace(/\*([\s\S]+?)\*/g, '<em>$1</em>');
+      // __underline__
+      txt = txt.replace(/__([\s\S]+?)__/g, '<u>$1</u>');
+      // ~~strike~~
+      txt = txt.replace(/~~([\s\S]+?)~~/g, '<s>$1</s>');
+
+      return txt;
     }
   
     // Map setup
@@ -374,7 +399,8 @@
       sheetMarkers.forEach(function (row) {
         // Expecting: owner, title, info, x, y, type 
         var owner = row.owner || '';
-        var title = row.title || 'Unknown';
+        var rawTitle = row.title || 'Unknown';
+        var title = rawTitle.length > 22 ? rawTitle.substring(0, 20) + '…' : rawTitle;
         var info  = row.info  || '';
         var x     = parseFloat(row.x);
         var y     = parseFloat(row.y);
@@ -392,7 +418,8 @@
   
         var marker = L.marker(position, { icon: zoomOutIcon }).addTo(map);
   
-        var infoHtml  = info ? info.replace(/\n/g, '<br>') : '';
+        // Formatted info with markup + line breaks
+        var infoHtml  = formatInfoText(info);
         var ownerHtml = owner ? '<i>' + owner + '</i>' : '';
         var divider   = (owner && infoHtml) ? '<hr class="popup-divider">' : '';
   
@@ -521,7 +548,7 @@
   
     // Initial load
     window.addEventListener('load', function () {
-      loadNeighborhood('Neighborhood 1');
+      loadNeighborhood('Subdivision 0');
     });
   </script>
 
