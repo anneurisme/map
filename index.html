@@ -247,7 +247,7 @@
       box-shadow: 0 0 6px rgba(255,255,255,0.5);
     }
 
-    /* === Bottom Drawer / Plot Image Bar === */
+    /*  Bottom Drawer details/photos */
     #bottom-drawer {
       position: fixed;
       left: 0;
@@ -260,7 +260,7 @@
       display: flex;
       flex-direction: column;
       transition: height 0.25s ease;
-      height: 275px; /* default expanded height */
+      height: 275px; /* This is finicky,  */
       font-family: Arial, sans-serif;
     }
 
@@ -300,7 +300,7 @@
       box-sizing: border-box;
     }
 
-    /* DETAILS LEFT — text scaled up */
+    /* Bottom drawer - LEFT details */
     .drawer-left {
       flex: 1;
       border-radius: 6px;
@@ -314,27 +314,27 @@
     }
 
     #drawer-plot-title {
-      font-size: 20px;  /* was 14px */
+      font-size: 20px; 
       font-weight: 600;
       color: #fbac3a;
       margin-bottom: 6px;
     }
 
     #drawer-plot-owner {
-      font-size: 16px;  /* was 12px */
+      font-size: 16px;
       color: #ccc;
       margin-bottom: 8px;
       font-style: italic;
     }
 
     #drawer-plot-info {
-      font-size: 16px;  /* was 12px */
+      font-size: 16px;
       color: #ddd;
       line-height: 1.5;
       overflow-y: auto;
     }
 
-    /* THUMBNAILS RIGHT */
+    /* Bottom Drawer - RIGHT photos */
     .drawer-right {
       flex: 0 0 55%;
       border-radius: 6px;
@@ -350,7 +350,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 12px 6px 16px; /* more left padding so first image isn't jammed */
+      padding: 6px 12px 6px 16px; 
       overflow-x: auto;
       box-sizing: border-box;
     }
@@ -367,7 +367,7 @@
 
     #drawer-images-placeholder {
       padding: 8px 12px;
-      font-size: 14px; /* slightly larger to match other text */
+      font-size: 14px; 
       color: #aaa;
     }
 
@@ -463,7 +463,7 @@
 
   <div id="map"></div>
 
-  <!-- Bottom Drawer integrated on the same page -->
+  <!-- Bottom Drawer -->
   <div id="bottom-drawer" class="collapsed">
     <div id="drawer-header">
       <span id="drawer-chevron">▲</span>
@@ -640,7 +640,6 @@
       if (e.key === 'Escape') closeLightbox();
     });
 
-    // owner is plot#, but could be "29" or "Plot 29"
     function extractPlotNumber(row, rawTitle) {
       if (row.owner !== undefined && row.owner !== null) {
         let v = String(row.owner).trim();
@@ -676,8 +675,7 @@
       var maxImages = 6;
       var loadedCount = 0;
       var attempted = 0;
-
-      // store successful loads so we can sort & append in order
+      
       var loadedImages = [];
 
       function finalizeImageList() {
@@ -689,7 +687,6 @@
           return;
         }
 
-        // sort by numeric index to ensure alphanumeric order
         loadedImages.sort(function(a, b) {
           return a.index - b.index;
         });
