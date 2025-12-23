@@ -772,7 +772,7 @@
       images.forEach(function (img) {
         var p = String((img && img.path) ? img.path : '');
         var parts = p.split('/');
-        var subfolder = (parts.length >= 2 && parts[1]) ? parts[1] : 'Images';
+        var subfolder = (parts.length >= 3 && parts[1]) ? parts[1] : 'Images';
 
         if (!groups[subfolder]) groups[subfolder] = [];
         groups[subfolder].push(img);
