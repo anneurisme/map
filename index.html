@@ -799,7 +799,8 @@
         var list = groups[name] || [];
         list.forEach(function (item) {
           var el = document.createElement('img');
-          el.src = item.url;
+          el.src = item.thumbUrl || item.url;
+          el.referrerPolicy = 'no-referrer';
           el.alt = item.name || 'Plot image';
 
           el.addEventListener('click', function () {
