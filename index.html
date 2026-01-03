@@ -477,7 +477,6 @@
       <div class="top-title">KoG Housing</div>
     </div>
     <div class="top-right">
-      <!-- UPDATED: Subdivision 1–4 only -->
       <select id="neighborhood-select">
         <option value="Subdivision 1">Subdivision 1</option>
         <option value="Subdivision 2">Subdivision 2</option>
@@ -598,7 +597,6 @@
     var iconSwitchZoom = 0;
     var markers = [];
 
-    // UPDATED: now subdivision is 1..4 (number)
     var currentSubdivisionIndex = 1;
 
     function getSubdivisionIndexFromName(name) {
@@ -872,7 +870,6 @@
     function loadNeighborhood(sheetName) {
       showLoadingScreen();
 
-      // UPDATED: now 1..4 as a number
       currentSubdivisionIndex = getSubdivisionIndexFromName(sheetName);
 
       var url = DATA_URL + '?sheet=' + encodeURIComponent(sheetName);
@@ -947,7 +944,6 @@
       });
     }
 
-    // UPDATED: default to Subdivision 1
     window.addEventListener('load', function () {
       loadNeighborhood('Subdivision 1');
     });
